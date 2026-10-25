@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biologia Flashcards</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        .progress {
+            font-size: 1.1em;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+
+        .flashcard {
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #card-image {
+            max-width: 100%;
+            max-height: 55vh;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            object-fit: contain;
+        }
+
+        .answer {
+            margin-top: 20px;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #27ae60;
+            background: #eafaf1;
+            padding: 15px 30px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 30px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 600;
+        }
+
+        #show-answer-btn {
+            background-color: #3498db;
+            color: white;
+        }
+
+        #show-answer-btn:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        #learned-btn {
+            background-color: #2ecc71;
+            color: white;
+        }
+
+        #learned-btn:hover {
+            background-color: #27ae60;
+            transform: translateY(-2px);
+        }
+
+        #needs-training-btn {
+            background-color: #e67e22;
+            color: white;
+        }
+
+        #needs-training-btn:hover {
+            background-color: #d35400;
+            transform: translateY(-2px);
+        }
+
+        #completion-message {
+            margin-top: 20px;
+        }
+
+        #completion-message h2 {
+            color: #27ae60;
+            margin-bottom: 20px;
+        }
+
+        #restart-btn {
+            background-color: #95a5a6;
+            color: white;
+            margin-top: 20px;
+        }
+
+        #restart-btn:hover {
+            background-color: #7f8c8d;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Biologia Flashcards</h1>
+        <div class="progress">
+            Learned: <span id="learned-count">0</span> | Remaining: <span id="remaining-count">22</span>
+        </div>
+        
+        <div class="flashcard" id="flashcard">
+            <img id="card-image" src="" alt="Flashcard Image">
+            <div class="answer" id="answer-container">
+                <p id="answer-text"></p>
+            </div>
+        </div>
+
+        <div class="buttons" id="main-buttons">
+            <button id="show-answer-btn" onclick="showAnswer()">Show Answer</button>
+            <button id="learned-btn" onclick="markLearned()" style="display: none;">Learned!</button>
+            <button id="needs-training-btn" onclick="markNeedsTraining()" style="display: none;">Needs More Training</button>
+        </div>
+        
+        <div id="completion-message" style="display: none;">
+            <h2>Congratulations! You have learned all the cards!</h2>
+            <button id="restart-btn" onclick="restart()">Start Over</button>
+        </div>
+    </div>
+
+    <script>
+        // The data is embedded directly here for a standalone HTML file.
+        // In a real application, you might fetch this from a separate .json file.
+        const flashcards = [
+            {"image_file_name": "extracted_images/slide_003.jpg", "correct_answer": "1. sinivuokko"},
+            {"image_file_name": "extracted_images/slide_004.jpg", "correct_answer": "2. käenkaali eli ketunleipä"},
+            {"image_file_name": "extracted_images/slide_005.jpg", "correct_answer": "3. mustikka"},
+            {"image_file_name": "extracted_images/slide_006.jpg", "correct_answer": "4. valkovuokko"},
+            {"image_file_name": "extracted_images/slide_007.jpg", "correct_answer": "5. vadelma"},
+            {"image_file_name": "extracted_images/slide_008.jpg", "correct_answer": "6. näsiä (myrkyllinen!)"},
+            {"image_file_name": "extracted_images/slide_009.jpg", "correct_answer": "7. puolukka"},
+            {"image_file_name": "extracted_images/slide_010.jpg", "correct_answer": "8. kanerva"},
+            {"image_file_name": "extracted_images/slide_011.jpg", "correct_answer": "9. vanamo  kukkavarsi haarautuu V-mallisesti, kellomaiset kukat"},
+            {"image_file_name": "extracted_images/slide_012.jpg", "correct_answer": "10.  metsätähti - terälehtien kärki terävä - lehdet samasta kohtaa vartta"},
+            {"image_file_name": "extracted_images/slide_013.jpg", "correct_answer": "11. mänty"},
+            {"image_file_name": "extracted_images/slide_014.jpg", "correct_answer": "12. kuusi"},
+            {"image_file_name": "extracted_images/slide_016.jpg", "correct_answer": "13. kantarelli eli keltavahvero"},
+            {"image_file_name": "extracted_images/slide_017.jpg", "correct_answer": "14. männynherkkutatti - paksu jalka, ruhkea lakki"},
+            {"image_file_name": "extracted_images/slide_018.jpg", "correct_answer": "15. suppilovahvero - keltainen jalka, ruskea lakki"},
+            {"image_file_name": "extracted_images/slide_019.jpg", "correct_answer": "16. karvarousku"},
+            {"image_file_name": "extracted_images/slide_020.jpg", "correct_answer": "17. lampaankääpä (lakin alaosa sileä)   - lakin yläosa vaalean ruskea"},
+            {"image_file_name": "extracted_images/slide_021.jpg", "correct_answer": "18. vaalea orakas (lakin alaosassa “piikit”)"},
+            {"image_file_name": "extracted_images/slide_022.jpg", "correct_answer": "19. punakärpässieni (myrkyllinen)"},
+            {"image_file_name": "extracted_images/slide_023.jpg", "correct_answer": "20. suippumyrkkyseitikki (tappavan myrkyllinen) - lakin keskiosassa nipukka"},
+            {"image_file_name": "extracted_images/slide_024.jpg", "correct_answer": "21. valkokärpässieni"},
+            {"image_file_name": "extracted_images/slide_025.jpg", "correct_answer": "22. pulkkosieni (myrkyllinen)"}
+        ];
+
+        let unlearnedCards = [...flashcards];
+        let currentIndex = 0;
+        let currentCard = null;
+        let totalCards = flashcards.length;
+        let learnedCount = 0;
+
+        const imageEl = document.getElementById('card-image');
+        const answerContainer = document.getElementById('answer-container');
+        const answerTextEl = document.getElementById('answer-text');
+        const showAnswerBtn = document.getElementById('show-answer-btn');
+        const learnedBtn = document.getElementById('learned-btn');
+        const needsTrainingBtn = document.getElementById('needs-training-btn');
+        const learnedCountEl = document.getElementById('learned-count');
+        const remainingCountEl = document.getElementById('remaining-count');
+        const completionMessage = document.getElementById('completion-message');
+        const flashcardEl = document.getElementById('flashcard');
+        const mainButtons = document.getElementById('main-buttons');
+        const progressBar = document.querySelector('.progress');
+
+        // Initialize the app
+        function init() {
+            updateStats();
+            
+            if (unlearnedCards.length === 0) {
+                showCompletion();
+            } else {
+                showCard();
+            }
+        }
+
+        function updateStats() {
+            learnedCount = totalCards - unlearnedCards.length;
+            learnedCountEl.textContent = learnedCount;
+            remainingCountEl.textContent = unlearnedCards.length;
+        }
+
+        function showCard() {
+            if (unlearnedCards.length === 0) {
+                showCompletion();
+                return;
+            }
+
+            // Wrap around if we've reached the end of the current unlearned list
+            if (currentIndex >= unlearnedCards.length) {
+                currentIndex = 0;
+            }
+
+            currentCard = unlearnedCards[currentIndex];
+            
+            // Update UI
+            imageEl.src = currentCard.image_file_name;
+            answerTextEl.textContent = currentCard.correct_answer;
+            
+            // Reset state
+            answerContainer.style.display = 'none';
+            learnedBtn.style.display = 'none';
+            needsTrainingBtn.style.display = 'none';
+            showAnswerBtn.style.display = 'block';
+            
+            // Add a small animation
+            flashcardEl.classList.remove('fade-in');
+            void flashcardEl.offsetWidth; // Trigger reflow to restart animation
+            flashcardEl.classList.add('fade-in');
+        }
+
+        function showAnswer() {
+            answerContainer.style.display = 'block';
+            learnedBtn.style.display = 'block';
+            needsTrainingBtn.style.display = 'block';
+            showAnswerBtn.style.display = 'none';
+        }
+
+        function markLearned() {
+            if (currentCard) {
+                // Remove the current card from the unlearned array
+                // The card at currentIndex is replaced by the next one, or the array shrinks.
+                unlearnedCards.splice(currentIndex, 1);
+                
+                updateStats();
+                showCard();
+            }
+        }
+
+        function markNeedsTraining() {
+            if (currentCard) {
+                // Move to the next index without removing the card from the unlearned array
+                currentIndex++;
+                // If we reached the end of the array, wrap around (handled in showCard)
+                showCard();
+            }
+        }
+
+        function showCompletion() {
+            flashcardEl.style.display = 'none';
+            mainButtons.style.display = 'none';
+            progressBar.style.display = 'none';
+            completionMessage.style.display = 'block';
+        }
+
+        function restart() {
+            unlearnedCards = [...flashcards];
+            currentIndex = 0;
+            learnedCount = 0;
+            
+            flashcardEl.style.display = 'flex';
+            mainButtons.style.display = 'flex';
+            progressBar.style.display = 'block';
+            completionMessage.style.display = 'none';
+            
+            updateStats();
+            showCard();
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            const key = event.key.toLowerCase();
+            
+            // Only process 'd' and 'f' keys
+            if (key !== 'd' && key !== 'f') {
+                return;
+            }
+            
+            // Do nothing if the completion screen is shown
+            if (completionMessage.style.display === 'block') {
+                return;
+            }
+            
+            // Check if the answer is currently hidden or shown
+            const isAnswerHidden = showAnswerBtn.style.display !== 'none';
+            
+            if (isAnswerHidden) {
+                // If answer is hidden, both 'd' and 'f' reveal it
+                showAnswer();
+            } else {
+                // If answer is shown, 'd' marks learned and 'f' needs training
+                if (key === 'd') {
+                    markLearned();
+                } else if (key === 'f') {
+                    markNeedsTraining();
+                }
+            }
+        });
+
+        // Start the app
+        init();
+    </script>
+</body>
+</html>
