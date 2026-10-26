@@ -143,17 +143,30 @@
             from { opacity: 0; transform: scale(0.98); }
             to { opacity: 1; transform: scale(1); }
         }
+        .shortcut-tip {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+            font-style: italic;
+        }
+
+        /* Hide shortcut tip on screens 1000px or narrower */
+        @media (max-width: 1000px) {
+            .shortcut-tip {
+                display: none;
+            }
+        }
+
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Biologia Flashcards</h1>
         <div class="progress">
             Learned: <span id="learned-count">0</span> | Remaining: <span id="remaining-count">22</span>
         </div>
         
         <div class="flashcard" id="flashcard">
-            <div class="shortcut-tip" style="font-size: 0.9em; color: #7f8c8d; margin-bottom: 10px; font-style: italic;">
+            <div class="shortcut-tip">
                 keyboard shortcuts: f: show answer, d: learned!, f: needs more training
             </div>
             <img id="card-image" src="" alt="Flashcard Image">
