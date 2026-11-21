@@ -1,4 +1,4 @@
-source_directory="come-with-me-regular"
+source_directory="$1"
 target_directory="/Users/jukka/Documents/public/flashcards/"
 mkdir -p "$target_directory"
 
