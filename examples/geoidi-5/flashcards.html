@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geoidi 5 Flashcards</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #eef4fb 0%, #f7f9fc 100%);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        .container {
+            background: #fff;
+            padding: 32px 40px 40px;
+            border-radius: 20px;
+            box-shadow: 0 12px 30px rgba(28, 52, 84, 0.12);
+            text-align: center;
+            max-width: 960px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #1f3a5f;
+            font-size: clamp(1.4rem, 3vw, 2rem);
+            margin-bottom: 8px;
+        }
+
+        .progress {
+            font-size: 1rem;
+            color: #6b7c93;
+            margin-bottom: 18px;
+        }
+
+        .progress strong {
+            color: #1f3a5f;
+        }
+
+        .flashcard {
+            margin: 12px 0 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        #card-image {
+            max-width: 100%;
+            max-height: 55vh;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+            object-fit: contain;
+        }
+
+        .question {
+            font-size: clamp(1.35rem, 4vw, 2.1rem);
+            font-weight: 650;
+            color: #1f3a5f;
+            line-height: 1.35;
+            max-width: 760px;
+            padding: 8px 12px;
+        }
+
+        .question.is-caption {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #5f7188;
+            margin-top: -4px;
+        }
+
+        .answer {
+            display: none;
+            margin-top: 4px;
+            font-size: clamp(1.15rem, 3vw, 1.6rem);
+            font-weight: 650;
+            color: #1e7a4b;
+            background: #eafaf1;
+            border: 1px solid #c9efd9;
+            padding: 16px 26px;
+            border-radius: 12px;
+            max-width: 820px;
+            line-height: 1.4;
+        }
+
+        .answer p {
+            white-space: pre-wrap;
+        }
+
+        .buttons {
+            margin-top: 18px;
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 28px;
+            font-size: 1.05rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        #show-answer-btn {
+            background-color: #3498db;
+        }
+
+        #show-answer-btn:hover {
+            background-color: #2980b9;
+        }
+
+        #learned-btn {
+            background-color: #2ecc71;
+        }
+
+        #learned-btn:hover {
+            background-color: #27ae60;
+        }
+
+        #needs-training-btn {
+            background-color: #e67e22;
+        }
+
+        #needs-training-btn:hover {
+            background-color: #d35400;
+        }
+
+        #completion-message {
+            display: none;
+            margin-top: 12px;
+        }
+
+        #completion-message h2 {
+            color: #27ae60;
+            margin-bottom: 12px;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.28s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.985); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+
+        .empty-state {
+            color: #8a9bb0;
+            font-size: 1.1rem;
+            padding: 30px 10px;
+        }
+
+        @media (max-width: 520px) {
+            .container {
+                padding: 22px 18px 28px;
+            }
+
+            button {
+                padding: 11px 20px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Geoidi 5 Flashcards</h1>
+        <div class="progress">
+            Learned: <strong id="learned-count">0</strong>
+            &nbsp;|&nbsp;
+            Remaining: <strong id="remaining-count">0</strong>
+            &nbsp;|&nbsp;
+            Total: <strong id="total-count">0</strong>
+        </div>
+
+        <div class="flashcard" id="flashcard">
+            <img id="card-image" src="" alt="Flashcard image">
+            <div class="question" id="card-question"></div>
+            <div class="answer" id="answer-container">
+                <p id="answer-text"></p>
+            </div>
+        </div>
+
+        <div class="buttons" id="main-buttons">
+            <button id="show-answer-btn" onclick="showAnswer()">Show Answer (f)</button>
+            <button id="learned-btn" onclick="markLearned()" style="display: none;">Learned! (d)</button>
+            <button id="needs-training-btn" onclick="markNeedsTraining()" style="display: none;">Needs More Training (f)</button>
+        </div>
+
+        <div id="completion-message">
+            <h2>Congratulations! You have learned all the cards!</h2>
+        </div>
+    </div>
+
+    <script>
+        // The cards are injected here by build_flashcards.py.
+        // Each card may contain: image (string), question (string), answer (string).
+        const flashcards = [
+  {
+    "question": "Kenelle ihmisoikeudet kuuluvat?",
+    "answer": "Ihmisoikeudet kuuluvat kaikille ihmisille. Jokainen ihminen on yhtä arvokas eli yhdenvertainen."
+  },
+  {
+    "question": "Mistä ihmisoikeudet eivät riipu?",
+    "answer": "Ne eivät riipu siitä, missä ihminen asuu, minkä ikäinen hän on, mihin uskontokuntaan hän kuuluu tai mitä sukupuolta ja seksuaalista suuntautumista hän edustaa."
+  },
+  {
+    "question": "Mitä ihmisoikeuksiin kuuluu?",
+    "answer": "Esimerkiksi oikeus elämään, ajatteluun, perheen perustamiseen, koulutukseen, työntekoon ja riittävään elintasoon."
+  },
+  {
+    "question": "Mitä ihmisoikeuksissa on kielletty?",
+    "answer": "Syrjintä, kiduttaminen, orjuus ja ihmiskauppa ovat kiellettyjä."
+  },
+  {
+    "question": "Keitä ovat vammaiset ja kuinka paljon heitä on maailmassa?",
+    "answer": "Vammaiset ovat maailman suurin vähemmistö. Heitä on noin 650 miljoonaa eri tavoin vammaista ihmistä: kuulovammaisia, näkövammaisia, liikuntavammaisia ja kehitysvammaisia."
+  },
+  {
+    "question": "Missä suurin osa vammaisista elää ja mitä ongelmia heillä on?",
+    "answer": "Suurin osa vammaisista elää kehitysmaissa, joissa heillä ei yleensä ole mahdollisuutta koulutukseen ja itsenäiseen elämään."
+  },
+  {
+    "question": "Mitä YK:n alajärjestöt Unesco ja Unicef tekevät?",
+    "answer": "Ne tekevät työtä ihmisoikeuksien ja hyvinvoinnin parantamiseksi. YK eli Yhdistyneet kansakunnat on järjestö, johon kuuluu suurin osa maailman valtioista."
+  },
+  {
+    "question": "Mitä koulutus parantaa?",
+    "answer": "Koulutus parantaa tulevaisuuden mahdollisuuksia erityisesti naisten asemaa."
+  },
+  {
+    "question": "Miksi koulunkäynti on vaikeaa monille perheille kehitysmaissa?",
+    "answer": "Koulunkäynti on monille perheille kallista. Vaikka opetus olisi maksutonta, perheiden on vaikea maksaa koulunkäyntiä."
+  },
+  {
+    "question": "Mitä koulutuksen avulla on pystytty estämään?",
+    "answer": "Koulutuksen avulla on pystytty estämään esimerkiksi tyttöjen ympärileikkauksia eli sukuelinten silpomisia."
+  },
+  {
+    "question": "Miksi poikien koulutuksen puute on ongelma?",
+    "answer": "Jos miehillä ei ole koulutusta, he saattavat aiheuttaa levottomuuksia ja rikollisuutta."
+  },
+  {
+    "question": "Mitä ihmiskauppa tarkoittaa?",
+    "answer": "Ihmiskauppa on nykyajan orjuutta, jossa ihminen joutuu toisten hyväksikäyttämäksi."
+  },
+  {
+    "question": "Miten ihmiskauppa voi tapahtua perheissä?",
+    "answer": "Esimerkiksi perheet myyvät lapsensa jollekin henkilölle tai yritykselle rahapalkkiota vastaan. Perheille annetaan usein katteettomia lupauksia lasten elinolojen parantumisesta."
+  },
+  {
+    "question": "Millaista lasten työ on ihmiskaupassa?",
+    "answer": "Todellisuudessa lapsille maksetaan hyvin alhaisia palkkoja, he joutuvat olemaan pitkiä päiviä töissä ja työolot ovat heikot."
+  },
+  {
+    "question": "Mitä lapsiavioliitto tarkoittaa?",
+    "answer": "Jopa joka kolmas tyttö kehitysmaissa naitetaan jo lapsena. Aviomies voi olla jopa kymmeniä vuosia vanhempi. Jos avioliitto solmitaan vasten tytön tahtoa, kyse on ihmiskaupasta."
+  },
+  {
+    "question": "Mitä seurauksia lapsiavioliitolla on tytölle?",
+    "answer": "Lapsena solmittu avioliitto merkitsee tytölle lähes aina koulunkäynnin lopettamista. Nuoret tytöt eivät uskalla tai voi kieltäytyä sukupuoliyhdynnästä, ja siksi heistä tulee äitejä hyvin nuorina."
+  },
+  {
+    "question": "Mitä on prostituutio?",
+    "answer": "Prostituutiossa ihmiset myyvät seksiä. Köyhissä maissa perheet saattavat myydä lapsensa seksityöhön."
+  },
+  {
+    "question": "Mitä on lapsisotilas?",
+    "answer": "Lapsisotilaat ovat lapsia, joita on värvätty sotaan. Esimerkiksi Erianin sisällissotaan värvättiin paljon lapsia."
+  },
+  {
+    "question": "Miten ihmisoikeuksien toteutumista valvotaan?",
+    "answer": "Ihmisoikeuksien toteutumista valvotaan sopimuksilla ja kansainvälisten järjestöjen toiminnalla."
+  },
+  {
+    "question": "Mitkä ovat keskeisiä ihmisoikeussopimuksia?",
+    "answer": "Esimerkiksi YK:n ihmisoikeussopimukset, joihin kuuluvat myös lapsen oikeuksien sopimukset."
+  },
+  {
+    "question": "Mitä kansalaisjärjestöt tekevät?",
+    "answer": "Kansalaisjärjestöt, kuten Amnesty International ja Human Rights Watch, valvovat ihmisoikeuksien toteutumista ja kampanjoivat niiden puolesta."
+  },
+  {
+    "question": "Mikä on kansainvälisen median ja internetin merkitys ihmisoikeuksille?",
+    "answer": "Internet ja kansainvälinen media levittävät tietoa epäkohdista. Ne ovat tärkeitä kanavia ihmisoikeusloukkausten paljastamisessa."
+  },
+  {
+    "question": "Mitä sosiaalisessa mediassa pitää muistaa?",
+    "answer": "Sosiaalisessa mediassa on noudatettava samoja käyttäytymissääntöjä kuin muuallakin. Toisia ihmisiä syrjivä vihapuhe on kiellettyä."
+  },
+  {
+    "question": "Mitkä ovat ihmisoikeuksien ytimessä?",
+    "answer": "Ihmisoikeuksien ytimessä ovat oikeus elämään, ajatteluun, perheen perustamiseen ja oman mielipiteen ilmaisemiseen. Ihmiskauppa ja syrjintä ovat kiellettyjä."
+  },
+  {
+    "question": "Mitä ovat esimerkkejä ihmisoikeuksista?",
+    "answer": "Esimerkiksi oikeus elämään, koulutukseen, mielipiteen ilmaisuun, perheen perustamiseen ja syrjimättömyyteen."
+  },
+  {
+    "question": "Miksi vanhemmat saattavat myydä lapsensa?",
+    "answer": "Köyhyys ja katteettomat lupaukset lasten paremmasta elämästä voivat johtaa siihen, että perheet myyvät lapsensa."
+  },
+  {
+    "question": "Miksi lapset joutuvat sotiin?",
+    "answer": "Lapsia värvätään pakolla tai houkutellaan lapsisotilaiksi. Heidät voidaan pakottaa taistelemaan tai tekemään muita tehtäviä."
+  },
+  {
+    "question": "Miksi lapsisotilaille tulee usein mielenterveysongelmia?",
+    "answer": "Lapsisotilaat kokevat traumaattisia asioita, kuten väkivaltaa ja kuolemaa, mikä voi johtaa mielenterveysongelmiin."
+  },
+  {
+    "question": "Miksi rasismi on aina väärin?",
+    "answer": "Rasismi on aina väärin, koska se loukkaa ihmisoikeuksia ja ihmisarvoa. Jokainen ihminen on yhtä arvokas riippumatta ihonväristä tai etnisestä taustasta."
+  },
+  {
+    "question": "Kuka on Malala Yousafzai ja mistä hän on kotoisin?",
+    "answer": "Malala Yousafzai on pakistanilainen ihmisoikeusaktivisti, joka on kotoisin Pakistanista."
+  },
+  {
+    "question": "Miksi Malala Yousafzai sai Nobelin rauhanpalkinnon?",
+    "answer": "Hän sai Nobelin rauhanpalkinnon työstään tyttöjen koulutuksen puolesta."
+  },
+  {
+    "question": "Mitä ihmisoikeusjärjestöjä Suomessa toimii?",
+    "answer": "Esimerkiksi Plan, YK-liitto, Amnesty International, Pelastakaa lapset, Kirkon ulkomaanapu ja Naisten Pankki."
+  },
+  {
+    "question": "Mitä tarkoittaa ihmisoikeuksien yhdenvertaisuus?",
+    "answer": "Se tarkoittaa, että jokainen ihminen on yhtä arvokas ja hänellä on samat oikeudet riippumatta taustastaan."
+  },
+  {
+    "question": "Mitä tarkoittaa syrjintä?",
+    "answer": "Syrjintä tarkoittaa ihmisten eriarvoista kohtelua esimerkiksi ihonvärin, sukupuolen, uskonnon tai vammaisuuden perusteella."
+  },
+  {
+    "question": "Mitä tarkoittaa ihmisarvo?",
+    "answer": "Ihmisarvo tarkoittaa jokaisen ihmisen synnynnäistä arvoa ja oikeutta tulla kohdelluksi kunnioittavasti."
+  },
+  {
+    "question": "Mitä tarkoittaa lapsen oikeuksien sopimus?",
+    "answer": "Se on YK:n sopimus, joka turvaa lasten oikeudet, kuten oikeuden koulutukseen, terveyteen ja suojeluun väkivallalta."
+  },
+  {
+    "question": "Mitä tarkoittaa vihapuhe?",
+    "answer": "Vihapuhe on toisia ihmisiä syrjivää tai halventavaa puhetta, joka on kiellettyä sosiaalisessa mediassa ja muuallakin."
+  },
+  {
+    "question": "Mitä tarkoittaa lapsityövoima?",
+    "answer": "Lapsityövoima tarkoittaa lasten tekemää työtä, joka on usein vaarallista ja estää heidän koulunkäyntinsä. Sitä esiintyy esimerkiksi tehtaissa."
+  },
+  {
+    "question": "Mitä tarkoittaa pakkoavioliitto?",
+    "answer": "Pakkoavioliitto on avioliitto, joka solmitaan vasten toisen osapuolen tahtoa. Se on ihmisoikeusloukkaus ja ihmiskaupan muoto."
+  },
+  {
+    "question": "Mitä tarkoittaa sukuelinten silpominen?",
+    "answer": "Sukuelinten silpominen on tyttöjen ja naisten sukuelinten vahingoittamista, joka on ihmisoikeusloukkaus. Koulutus on auttanut estämään sitä."
+  },
+  {
+    "question": "Mitä tarkoittaa itsemääräämisoikeus?",
+    "answer": "Itsemääräämisoikeus tarkoittaa jokaisen oikeutta päättää omista asioistaan, kuten avioliitosta ja elämästään."
+  },
+  {
+    "question": "Mitä tarkoittaa tasa-arvo?",
+    "answer": "Tasa-arvo tarkoittaa, että kaikilla ihmisillä on samat oikeudet ja mahdollisuudet riippumatta esimerkiksi sukupuolesta."
+  },
+  {
+    "question": "Mitä tarkoittaa kehitysmaa?",
+    "answer": "Kehitysmaa on maa, jossa on matala elintaso ja puutteita esimerkiksi koulutuksessa ja terveydenhuollossa."
+  },
+  {
+    "question": "Mitä tarkoittaa vähemmistö?",
+    "answer": "Vähemmistö on ryhmä, joka on lukumääräisesti pienempi kuin muu väestö ja jolla voi olla erityistarpeita tai -oikeuksia."
+  },
+  {
+    "question": "Mitä tarkoittaa kansainvälinen sopimus?",
+    "answer": "Kansainvälinen sopimus on valtioiden välinen sitova sopimus, jossa sovitaan yhteisistä säännöistä, kuten ihmisoikeuksien kunnioittamisesta."
+  },
+  {
+    "question": "Mitä tarkoittaa kansalaisjärjestö?",
+    "answer": "Kansalaisjärjestö on voittoa tavoittelematon järjestö, joka toimii yhteiskunnallisten asioiden, kuten ihmisoikeuksien, edistämiseksi."
+  },
+  {
+    "question": "Mitä tarkoittaa Amnesty International?",
+    "answer": "Amnesty International on kansainvälinen kansalaisjärjestö, joka valvoo ja puolustaa ihmisoikeuksia kaikkialla maailmassa."
+  },
+  {
+    "question": "Mitä tarkoittaa Human Rights Watch?",
+    "answer": "Human Rights Watch on kansainvälinen kansalaisjärjestö, joka tutkii ja raportoi ihmisoikeusloukkauksista."
+  },
+  {
+    "question": "Mitä tarkoittaa Unesco?",
+    "answer": "Unesco on YK:n alajärjestö, joka edistää koulutusta, tiedettä ja kulttuuria sekä ihmisoikeuksia."
+  },
+  {
+    "question": "Mitä tarkoittaa Unicef?",
+    "answer": "Unicef on YK:n alajärjestö, joka työskentelee lasten oikeuksien ja hyvinvoinnin parantamiseksi."
+  },
+  {
+    "question": "Mitä tarkoittaa YK?",
+    "answer": "YK eli Yhdistyneet kansakunnat on kansainvälinen järjestö, johon kuuluu suurin osa maailman valtioista. Sen alajärjestöt tekevät työtä ihmisoikeuksien ja hyvinvoinnin parantamiseksi."
+  },
+  {
+    "question": "Mitä tarkoittaa sukupuolten välinen tasa-arvo?",
+    "answer": "Sukupuolten välinen tasa-arvo tarkoittaa, että naisilla ja miehillä on samat oikeudet ja mahdollisuudet yhteiskunnassa."
+  },
+  {
+    "question": "Mitä tarkoittaa ihmisoikeusloukkaus?",
+    "answer": "Ihmisoikeusloukkaus on teko tai tilanne, jossa ihmisen oikeuksia ei kunnioiteta tai niitä rikotaan, kuten syrjintä tai ihmiskauppa."
+  },
+  {
+    "question": "Mitä tarkoittaa ihmisoikeuksien valvonta?",
+    "answer": "Ihmisoikeuksien valvonta tarkoittaa sitä, että kansainväliset järjestöt ja sopimukset seuraavat, toteutuvatko ihmisoikeudet käytännössä."
+  },
+  {
+    "question": "Mitä tarkoittaa ihmisoikeuskasvatus?",
+    "answer": "Ihmisoikeuskasvatus opettaa ihmisiä tuntemaan omat ja toisten oikeudet sekä kunnioittamaan niitä."
+  }
+];
+
+        let unlearnedCards = [...flashcards];
+        let currentIndex = 0;
+        let currentCard = null;
+        const totalCards = flashcards.length;
+
+        const imageEl = document.getElementById('card-image');
+        const questionEl = document.getElementById('card-question');
+        const answerContainer = document.getElementById('answer-container');
+        const answerTextEl = document.getElementById('answer-text');
+        const showAnswerBtn = document.getElementById('show-answer-btn');
+        const learnedBtn = document.getElementById('learned-btn');
+        const needsTrainingBtn = document.getElementById('needs-training-btn');
+        const learnedCountEl = document.getElementById('learned-count');
+        const remainingCountEl = document.getElementById('remaining-count');
+        const totalCountEl = document.getElementById('total-count');
+        const completionMessage = document.getElementById('completion-message');
+        const flashcardEl = document.getElementById('flashcard');
+        const mainButtons = document.getElementById('main-buttons');
+        const progressBar = document.querySelector('.progress');
+
+        function init() {
+            totalCountEl.textContent = totalCards;
+            updateStats();
+
+            if (totalCards === 0) {
+                showEmptyState();
+            } else if (unlearnedCards.length === 0) {
+                showCompletion();
+            } else {
+                showCard();
+            }
+        }
+
+        function updateStats() {
+            learnedCountEl.textContent = totalCards - unlearnedCards.length;
+            remainingCountEl.textContent = unlearnedCards.length;
+        }
+
+        function showCard() {
+            if (unlearnedCards.length === 0) {
+                showCompletion();
+                return;
+            }
+
+            if (currentIndex >= unlearnedCards.length) {
+                currentIndex = 0;
+            }
+
+            currentCard = unlearnedCards[currentIndex];
+
+            // Front side: image, textual question, or both.
+            const hasImage = Boolean(currentCard.image);
+            const hasQuestion = Boolean(currentCard.question);
+
+            if (hasImage) {
+                imageEl.src = currentCard.image;
+                imageEl.alt = currentCard.question || 'Flashcard image';
+                imageEl.style.display = 'block';
+            } else {
+                imageEl.style.display = 'none';
+                imageEl.removeAttribute('src');
+            }
+
+            if (hasQuestion) {
+                questionEl.textContent = currentCard.question;
+                questionEl.style.display = 'block';
+                questionEl.classList.toggle('is-caption', hasImage);
+            } else {
+                questionEl.style.display = 'none';
+                questionEl.textContent = '';
+                questionEl.classList.remove('is-caption');
+            }
+
+            answerTextEl.textContent = currentCard.answer || '';
+
+            // Back side starts hidden.
+            answerContainer.style.display = 'none';
+            learnedBtn.style.display = 'none';
+            needsTrainingBtn.style.display = 'none';
+            showAnswerBtn.style.display = 'block';
+
+            flashcardEl.classList.remove('fade-in');
+            void flashcardEl.offsetWidth;
+            flashcardEl.classList.add('fade-in');
+        }
+
+        function showAnswer() {
+            answerContainer.style.display = 'block';
+            learnedBtn.style.display = 'block';
+            needsTrainingBtn.style.display = 'block';
+            showAnswerBtn.style.display = 'none';
+        }
+
+        function markLearned() {
+            if (!currentCard) {
+                return;
+            }
+
+            unlearnedCards.splice(currentIndex, 1);
+            updateStats();
+            showCard();
+        }
+
+        function markNeedsTraining() {
+            if (!currentCard) {
+                return;
+            }
+
+            currentIndex++;
+            showCard();
+        }
+
+        function showCompletion() {
+            flashcardEl.style.display = 'none';
+            mainButtons.style.display = 'none';
+            progressBar.style.display = 'none';
+            completionMessage.style.display = 'block';
+        }
+
+        function showEmptyState() {
+            flashcardEl.style.display = 'none';
+            mainButtons.style.display = 'none';
+            progressBar.style.display = 'none';
+            completionMessage.style.display = 'block';
+            completionMessage.innerHTML = '<div class="empty-state">No cards found. Add some cards to the JSON file.</div>';
+        }
+
+        document.addEventListener('keydown', function (event) {
+            const key = event.key.toLowerCase();
+
+            if (completionMessage.style.display === 'block') {
+                return;
+            }
+
+            const isAnswerHidden = showAnswerBtn.style.display !== 'none';
+
+            if (key === 'f') {
+                event.preventDefault();
+                if (isAnswerHidden) {
+                    showAnswer();
+                } else {
+                    markNeedsTraining();
+                }
+                return;
+            }
+
+            if (isAnswerHidden) {
+                return;
+            }
+
+            if (key === 'd') {
+                markLearned();
+            }
+        });
+
+        init();
+    </script>
+</body>
+</html>

@@ -11,8 +11,8 @@ The visual style and the build workflow follow `flashcards_template.html` and
 - `multiple_choice_template.html` — the HTML/CSS/JavaScript template. It contains
   two placeholders: `__QUIZ_TITLE__` and `__QUIZ_JSON__`.
 - `build_multiple_choice.py` — reads a JSON file and writes a standalone HTML file.
-- `multiple-choice-example/questions.json` — example JSON input.
-- `multiple-choice-example/quiz.html` — example output built from that JSON.
+- `examples/multiple-choice-example/questions.json` — example JSON input.
+- `examples/multiple-choice-example/quiz.html` — example output built from that JSON.
 
 ## JSON format
 
@@ -72,8 +72,8 @@ file name.
 Example:
 
 ```bash
-python3 build_multiple_choice.py multiple-choice-example/questions.json \
-  -o multiple-choice-example/quiz.html \
+python3 build_multiple_choice.py examples/multiple-choice-example/questions.json \
+  -o examples/multiple-choice-example/quiz.html \
   -t "Monivalintatehtävät – esimerkki"
 ```
 
