@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mosaiikki 8 – Syksy</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #eef4fb 0%, #f7f9fc 100%);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        .container {
+            background: #fff;
+            padding: 32px 40px 40px;
+            border-radius: 20px;
+            box-shadow: 0 12px 30px rgba(28, 52, 84, 0.12);
+            text-align: center;
+            max-width: 960px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #1f3a5f;
+            font-size: clamp(1.4rem, 3vw, 2rem);
+            margin-bottom: 8px;
+        }
+
+        .progress {
+            font-size: 1rem;
+            color: #6b7c93;
+            margin-bottom: 18px;
+        }
+
+        .progress strong {
+            color: #1f3a5f;
+        }
+
+        .flashcard {
+            margin: 12px 0 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        #card-image {
+            max-width: 100%;
+            max-height: 55vh;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+            object-fit: contain;
+        }
+
+        .question {
+            font-size: clamp(1.35rem, 4vw, 2.1rem);
+            font-weight: 650;
+            color: #1f3a5f;
+            line-height: 1.35;
+            max-width: 760px;
+            padding: 8px 12px;
+        }
+
+        .question.is-caption {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #5f7188;
+            margin-top: -4px;
+        }
+
+        .answer {
+            display: none;
+            margin-top: 4px;
+            font-size: clamp(1.15rem, 3vw, 1.6rem);
+            font-weight: 650;
+            color: #1e7a4b;
+            background: #eafaf1;
+            border: 1px solid #c9efd9;
+            padding: 16px 26px;
+            border-radius: 12px;
+            max-width: 820px;
+            line-height: 1.4;
+        }
+
+        .answer p {
+            white-space: pre-wrap;
+        }
+
+        .buttons {
+            margin-top: 18px;
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 28px;
+            font-size: 1.05rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        #show-answer-btn {
+            background-color: #3498db;
+        }
+
+        #show-answer-btn:hover {
+            background-color: #2980b9;
+        }
+
+        #learned-btn {
+            background-color: #2ecc71;
+        }
+
+        #learned-btn:hover {
+            background-color: #27ae60;
+        }
+
+        #needs-training-btn {
+            background-color: #e67e22;
+        }
+
+        #needs-training-btn:hover {
+            background-color: #d35400;
+        }
+
+        #completion-message {
+            display: none;
+            margin-top: 12px;
+        }
+
+        #completion-message h2 {
+            color: #27ae60;
+            margin-bottom: 12px;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.28s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.985); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+
+        .empty-state {
+            color: #8a9bb0;
+            font-size: 1.1rem;
+            padding: 30px 10px;
+        }
+
+        @media (max-width: 520px) {
+            .container {
+                padding: 22px 18px 28px;
+            }
+
+            button {
+                padding: 11px 20px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Mosaiikki 8 – Syksy</h1>
+        <div class="progress">
+            Learned: <strong id="learned-count">0</strong>
+            &nbsp;|&nbsp;
+            Remaining: <strong id="remaining-count">0</strong>
+            &nbsp;|&nbsp;
+            Total: <strong id="total-count">0</strong>
+        </div>
+
+        <div class="flashcard" id="flashcard">
+            <img id="card-image" src="" alt="Flashcard image">
+            <div class="question" id="card-question"></div>
+            <div class="answer" id="answer-container">
+                <p id="answer-text"></p>
+            </div>
+        </div>
+
+        <div class="buttons" id="main-buttons">
+            <button id="show-answer-btn" onclick="showAnswer()">Show Answer (f)</button>
+            <button id="learned-btn" onclick="markLearned()" style="display: none;">Learned! (d)</button>
+            <button id="needs-training-btn" onclick="markNeedsTraining()" style="display: none;">Needs More Training (f)</button>
+        </div>
+
+        <div id="completion-message">
+            <h2>Congratulations! You have learned all the cards!</h2>
+        </div>
+    </div>
+
+    <script>
+        // The cards are injected here by build_flashcards.py.
+        // Each card may contain: image (string), question (string), answer (string).
+        const flashcards = [
+  {
+    "question": "Miten kristinusko on vaikuttanut länsimaiseen kulttuuriin?",
+    "answer": "Kristinusko on muokannut muun muassa taidetta, musiikkia, kirjallisuutta, arkkitehtuuria, kalenteria, juhlia, koulutusta ja käsityksiä ihmisarvosta."
+  },
+  {
+    "question": "Miten kristillinen perinne näkyy ajankäytössä ja kalenterissa?",
+    "answer": "Sunnuntai pyhäpäivänä, joulu ja pääsiäinen sekä vuosiluvun laskeminen Kristuksen syntymästä ovat kristillistä perinnettä."
+  },
+  {
+    "question": "Mitä kristillisiä juhlia vietetään ja mitä ne muistuttavat?",
+    "answer": "Joulu muistuttaa Jeesuksen syntymästä, pääsiäinen hänen kuolemastaan ja ylösnousemuksestaan ja helluntai Pyhän Hengen vuodattamisesta."
+  },
+  {
+    "question": "Miten kristinusko näkyy suomalaisessa yhteiskunnassa?",
+    "answer": "Se näkyy kirkkorakennuksissa, hautausmaissa, juhlissa ja tavoissa sekä kirkon tekemässä diakonia-, lähetys- ja nuorisotyössä."
+  },
+  {
+    "question": "Mitä diakonia tarkoittaa?",
+    "answer": "Diakonia on kirkon auttamistyötä, jossa tuetaan apua tarvitsevia lähimmäisenrakkauden ja Jeesuksen esimerkin mukaisesti."
+  },
+  {
+    "question": "Miksi kristittyjä vainottiin Rooman valtakunnassa?",
+    "answer": "Koska he kieltäytyivät palvomasta keisaria ja roomalaisia jumalia, ja heitä pidettiin yhteiskunnalle vaarallisina. Vainoja oli erityisesti Neron ja Diocletianuksen aikana."
+  },
+  {
+    "question": "Mitä marttyyri tarkoittaa?",
+    "answer": "Marttyyri on henkilö, joka kuolee uskonsa vuoksi. Varhaiskirkon marttyyrit ovat kristittyjen esikuvia."
+  },
+  {
+    "question": "Miksi kristityt kokoontuivat katakombeissa?",
+    "answer": "Vainojen aikana he tarvitsivat salaisen paikan jumalanpalvelukselle. Katakombit olivat myös hautapaikkoja."
+  },
+  {
+    "question": "Miten kristittyjen vainot loppuivat Rooman valtakunnassa?",
+    "answer": "Keisari Konstantinus antoi vuonna 313 Milanon ediktin, joka salli kristinuskon. Myöhemmin kristinuskosta tuli valtionuskonto."
+  },
+  {
+    "question": "Millaista kristittyjen vainoa on nykyään?",
+    "answer": "Monissa maissa kristittyjä syrjitään, vangitaan tai vainotaan väkivallalla heidän uskonsa vuoksi. Vainoa on esimerkiksi Pohjois-Koreassa, Lähi-idässä ja eräissä Afrikan maissa."
+  },
+  {
+    "question": "Kuka johtaa katolista kirkkoa?",
+    "answer": "Paavi, joka on Rooman piispa ja apostoli Pietarin seuraaja. Hänen istuimensa on Vatikaanissa."
+  },
+  {
+    "question": "Mitkä ovat katolisen kirkon seitsemän sakramenttia?",
+    "answer": "Kaste, konfirmaatio, eukaristia, katumus eli rippi, sairaiden voitelu, pappisvihkimys ja avioliitto."
+  },
+  {
+    "question": "Mitä katolisessa messussa tapahtuu?",
+    "answer": "Messu on kirkon pääjumalanpalvelus. Siinä luetaan Raamattua ja vietetään eukaristia, jossa leipä ja viini muuttuvat Kristuksen ruumiiksi ja vereksi."
+  },
+  {
+    "question": "Miten katoliset suhtautuvat pyhimyksiin ja Mariaan?",
+    "answer": "He kunnioittavat pyhimyksiä esikuvina ja pyytävät heiltä esirukousta. Mariaa kunnioitetaan erityisesti Jeesuksen äitinä."
+  },
+  {
+    "question": "Mitä luostareissa tehdään?",
+    "answer": "Luostareissa munkit ja nunnat elävät yhteisössä, rukoilevat ja tekevät työtä. He ovat sitoutuneet köyhyyteen, selibaattiin ja kuuliaisuuteen."
+  },
+  {
+    "question": "Miten ortodoksinen ja katolinen kirkko erkanivat toisistaan?",
+    "answer": "Ne erkanivat toisistaan vuoden 1054 suuressa skismassa, kun itäisen ja läntisen kirkon väliset erimielisyydet kärjistyivät."
+  },
+  {
+    "question": "Kuka johtaa ortodoksista kirkkoa?",
+    "answer": "Ortodoksisella kirkolla ei ole yhtä paavia. Sitä johtavat patriarkat ja piispat, ja Konstantinopolin ekumeeninen patriarkka on ensimmäinen vertaistensa joukossa."
+  },
+  {
+    "question": "Mitä ikonit ovat ortodoksisessa kirkossa?",
+    "answer": "Ikonit ovat pyhiä kuvia, joiden kautta uskovat kunnioittavat Jumalaa ja pyhiä. Niitä ei palvota, vaan kunnioitetaan."
+  },
+  {
+    "question": "Millainen ortodoksinen jumalanpalvelus on?",
+    "answer": "Se on liturgia, jossa on runsaasti laulua, rukousta, suitsuketta ja ikoneja. Papit toimittavat liturgian ikonostaasin takana."
+  },
+  {
+    "question": "Miten ortodoksisuus näkyy Suomessa?",
+    "answer": "Suomen ortodoksinen kirkko on autonominen kirkko, jolla on omat seurakunnat, luostarit ja perinteet. Ortodoksisuus tuli Suomeen erityisesti Karjalan kautta."
+  },
+  {
+    "question": "Kuka oli Martti Luther?",
+    "answer": "Saksalainen munkki, teologi ja professori, joka aloitti uskonpuhdistuksen 1500-luvulla."
+  },
+  {
+    "question": "Mitä Luther teki vuonna 1517?",
+    "answer": "Hän julkaisi Wittenbergissä 95 teesiä, joissa arvosteli aneiden eli syntien anteeksiannon myymistä ja muita kirkon epäkohtia."
+  },
+  {
+    "question": "Mitkä olivat Lutherin keskeiset opit?",
+    "answer": "Ihminen pelastuu yksin uskosta ja armosta, Raamattu on uskon ylin ohje ja jokainen uskova on pappi."
+  },
+  {
+    "question": "Miksi Lutherin Raamatun käännös oli tärkeä?",
+    "answer": "Hän käänsi Raamatun saksaksi, jotta tavallinen kansa pystyi lukemaan sitä. Käännös yhtenäisti myös saksan kieltä."
+  },
+  {
+    "question": "Mitä uskonpuhdistus tarkoittaa ja mitä seurauksia sillä oli?",
+    "answer": "Uskonpuhdistus oli 1500-luvun liike, joka halusi uudistaa kirkkoa. Se johti lännen kirkon jakautumiseen katoliseen ja protestanttisiin kirkkoihin, ja syntyi luterilaisia kirkkoja. Uskonpuhdistus vaikutti myös koulutukseen, kieleen ja Euroopan historiaan."
+  }
+];
+
+        let unlearnedCards = [...flashcards];
+        let currentIndex = 0;
+        let currentCard = null;
+        const totalCards = flashcards.length;
+
+        const imageEl = document.getElementById('card-image');
+        const questionEl = document.getElementById('card-question');
+        const answerContainer = document.getElementById('answer-container');
+        const answerTextEl = document.getElementById('answer-text');
+        const showAnswerBtn = document.getElementById('show-answer-btn');
+        const learnedBtn = document.getElementById('learned-btn');
+        const needsTrainingBtn = document.getElementById('needs-training-btn');
+        const learnedCountEl = document.getElementById('learned-count');
+        const remainingCountEl = document.getElementById('remaining-count');
+        const totalCountEl = document.getElementById('total-count');
+        const completionMessage = document.getElementById('completion-message');
+        const flashcardEl = document.getElementById('flashcard');
+        const mainButtons = document.getElementById('main-buttons');
+        const progressBar = document.querySelector('.progress');
+
+        function init() {
+            totalCountEl.textContent = totalCards;
+            updateStats();
+
+            if (totalCards === 0) {
+                showEmptyState();
+            } else if (unlearnedCards.length === 0) {
+                showCompletion();
+            } else {
+                showCard();
+            }
+        }
+
+        function updateStats() {
+            learnedCountEl.textContent = totalCards - unlearnedCards.length;
+            remainingCountEl.textContent = unlearnedCards.length;
+        }
+
+        function showCard() {
+            if (unlearnedCards.length === 0) {
+                showCompletion();
+                return;
+            }
+
+            if (currentIndex >= unlearnedCards.length) {
+                currentIndex = 0;
+            }
+
+            currentCard = unlearnedCards[currentIndex];
+
+            // Front side: image, textual question, or both.
+            const hasImage = Boolean(currentCard.image);
+            const hasQuestion = Boolean(currentCard.question);
+
+            if (hasImage) {
+                imageEl.src = currentCard.image;
+                imageEl.alt = currentCard.question || 'Flashcard image';
+                imageEl.style.display = 'block';
+            } else {
+                imageEl.style.display = 'none';
+                imageEl.removeAttribute('src');
+            }
+
+            if (hasQuestion) {
+                questionEl.textContent = currentCard.question;
+                questionEl.style.display = 'block';
+                questionEl.classList.toggle('is-caption', hasImage);
+            } else {
+                questionEl.style.display = 'none';
+                questionEl.textContent = '';
+                questionEl.classList.remove('is-caption');
+            }
+
+            answerTextEl.textContent = currentCard.answer || '';
+
+            // Back side starts hidden.
+            answerContainer.style.display = 'none';
+            learnedBtn.style.display = 'none';
+            needsTrainingBtn.style.display = 'none';
+            showAnswerBtn.style.display = 'block';
+
+            flashcardEl.classList.remove('fade-in');
+            void flashcardEl.offsetWidth;
+            flashcardEl.classList.add('fade-in');
+        }
+
+        function showAnswer() {
+            answerContainer.style.display = 'block';
+            learnedBtn.style.display = 'block';
+            needsTrainingBtn.style.display = 'block';
+            showAnswerBtn.style.display = 'none';
+        }
+
+        function markLearned() {
+            if (!currentCard) {
+                return;
+            }
+
+            unlearnedCards.splice(currentIndex, 1);
+            updateStats();
+            showCard();
+        }
+
+        function markNeedsTraining() {
+            if (!currentCard) {
+                return;
+            }
+
+            currentIndex++;
+            showCard();
+        }
+
+        function showCompletion() {
+            flashcardEl.style.display = 'none';
+            mainButtons.style.display = 'none';
+            progressBar.style.display = 'none';
+            completionMessage.style.display = 'block';
+        }
+
+        function showEmptyState() {
+            flashcardEl.style.display = 'none';
+            mainButtons.style.display = 'none';
+            progressBar.style.display = 'none';
+            completionMessage.style.display = 'block';
+            completionMessage.innerHTML = '<div class="empty-state">No cards found. Add some cards to the JSON file.</div>';
+        }
+
+        document.addEventListener('keydown', function (event) {
+            const key = event.key.toLowerCase();
+
+            if (completionMessage.style.display === 'block') {
+                return;
+            }
+
+            const isAnswerHidden = showAnswerBtn.style.display !== 'none';
+
+            if (key === 'f') {
+                event.preventDefault();
+                if (isAnswerHidden) {
+                    showAnswer();
+                } else {
+                    markNeedsTraining();
+                }
+                return;
+            }
+
+            if (isAnswerHidden) {
+                return;
+            }
+
+            if (key === 'd') {
+                markLearned();
+            }
+        });
+
+        init();
+    </script>
+</body>
+</html>

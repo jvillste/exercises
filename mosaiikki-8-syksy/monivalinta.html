@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mosaiikki 8 – Kristinusko</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #eef4fb 0%, #f7f9fc 100%);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        .container {
+            background: #fff;
+            padding: 32px 40px 40px;
+            border-radius: 20px;
+            box-shadow: 0 12px 30px rgba(28, 52, 84, 0.12);
+            text-align: center;
+            max-width: 960px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #1f3a5f;
+            font-size: clamp(1.4rem, 3vw, 2rem);
+            margin-bottom: 8px;
+        }
+
+        .progress {
+            font-size: 1rem;
+            color: #6b7c93;
+            margin-bottom: 18px;
+        }
+
+        .progress strong {
+            color: #1f3a5f;
+        }
+
+        .question {
+            font-size: clamp(1.35rem, 4vw, 2.1rem);
+            font-weight: 650;
+            color: #1f3a5f;
+            line-height: 1.35;
+            max-width: 760px;
+            padding: 8px 12px;
+            margin: 0 auto;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 18px auto 0;
+            max-width: 760px;
+            width: 100%;
+            text-align: left;
+        }
+
+        .option-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 18px;
+            background: #fff;
+            color: #1f3a5f;
+            border: 2px solid #d7e3f1;
+            border-radius: 14px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            text-align: left;
+            transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: #f2f7fd;
+            border-color: #3498db;
+            transform: translateY(-1px);
+        }
+
+        .option-btn:disabled {
+            cursor: default;
+            transform: none;
+        }
+
+        .option-btn.is-correct {
+            background: #eafaf1;
+            border-color: #2ecc71;
+            color: #1e7a4b;
+        }
+
+        .option-btn.is-wrong {
+            background: #fdecea;
+            border-color: #e74c3c;
+            color: #a02b20;
+        }
+
+        .option-btn.is-dimmed {
+            opacity: 0.55;
+        }
+
+        .option-number {
+            flex: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #eef4fb;
+            color: #1f3a5f;
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
+        .option-btn.is-correct .option-number {
+            background: #d2f4e1;
+            color: #1e7a4b;
+        }
+
+        .option-btn.is-wrong .option-number {
+            background: #fad7d2;
+            color: #a02b20;
+        }
+
+        .feedback {
+            display: none;
+            margin: 18px auto 0;
+            max-width: 760px;
+            padding: 16px 20px;
+            border-radius: 12px;
+            text-align: left;
+            font-size: 1.05rem;
+            font-weight: 650;
+            line-height: 1.45;
+        }
+
+        .feedback.correct {
+            background: #eafaf1;
+            border: 1px solid #c9efd9;
+            color: #1e7a4b;
+        }
+
+        .feedback.wrong {
+            background: #fdecea;
+            border: 1px solid #f5c6c0;
+            color: #a02b20;
+        }
+
+        .feedback-explanation {
+            margin-top: 8px;
+            color: #1f3a5f;
+            font-weight: 500;
+        }
+
+        .buttons {
+            margin-top: 18px;
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 28px;
+            font-size: 1.05rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        #next-btn {
+            background-color: #3498db;
+        }
+
+        #next-btn:hover {
+            background-color: #2980b9;
+        }
+
+        #retry-wrong-btn {
+            background-color: #e67e22;
+        }
+
+        #retry-wrong-btn:hover {
+            background-color: #d35400;
+        }
+
+        #restart-btn {
+            background-color: #2ecc71;
+        }
+
+        #restart-btn:hover {
+            background-color: #27ae60;
+        }
+
+        #completion-message {
+            display: none;
+            margin-top: 12px;
+        }
+
+        #completion-message h2 {
+            color: #27ae60;
+            margin-bottom: 12px;
+        }
+
+        #completion-message p {
+            color: #5f7188;
+            font-size: 1.05rem;
+            line-height: 1.45;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.28s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.985); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+
+        .empty-state {
+            color: #8a9bb0;
+            font-size: 1.1rem;
+            padding: 30px 10px;
+        }
+
+        @media (max-width: 520px) {
+            .container {
+                padding: 22px 18px 28px;
+            }
+
+            button {
+                padding: 11px 20px;
+                font-size: 1rem;
+            }
+
+            .option-btn {
+                padding: 12px 14px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Mosaiikki 8 – Kristinusko</h1>
+        <div class="progress">
+            Oikein: <strong id="correct-count">0</strong>
+            &nbsp;|&nbsp;
+            Vastattu: <strong id="answered-count">0</strong>
+            / <strong id="total-count">0</strong>
+        </div>
+
+        <div id="quiz-area">
+            <div class="question" id="question-text"></div>
+            <div class="options" id="options-container"></div>
+            <div class="feedback" id="feedback">
+                <p id="feedback-result"></p>
+                <p class="feedback-explanation" id="feedback-explanation"></p>
+            </div>
+        </div>
+
+        <div class="buttons" id="main-buttons">
+            <button id="next-btn" onclick="nextQuestion()" style="display: none;">Seuraava (Enter)</button>
+        </div>
+
+        <div id="completion-message">
+            <h2 id="completion-heading"></h2>
+            <p id="completion-text"></p>
+            <div class="buttons">
+                <button id="retry-wrong-btn" onclick="retryWrong()">Harjoittele väärät vastaukset (v)</button>
+                <button id="restart-btn" onclick="restartQuiz()">Aloita alusta (r)</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // The questions are injected here by build_multiple_choice.py.
+        // Each question contains: question (string), options (string list),
+        // correct (zero-based option index) and an optional explanation (string).
+        const allQuestions = [
+  {
+    "question": "Kuinka suuri osa maapallon asukkaista on kristittyjä?",
+    "options": [
+      "Noin joka kolmas",
+      "Noin joka kymmenes",
+      "Noin puolet",
+      "Noin joka sadas"
+    ],
+    "correct": 0,
+    "explanation": "Noin 33 prosenttia maailman väestöstä on kristittyjä."
+  },
+  {
+    "question": "Kehen kristinusko perustuu?",
+    "options": [
+      "Jeesus Nasaretilaiseen",
+      "Apostoli Paavaliin",
+      "Keisari Konstantinukseen",
+      "Martti Lutheriin"
+    ],
+    "correct": 0,
+    "explanation": "Kristinusko perustuu Jeesus Nasaretilaisen toimintaan ja opetuksiin."
+  },
+  {
+    "question": "Mitkä ovat kristinuskon kolme pääsuuntausta?",
+    "options": [
+      "Katolinen kirkko, ortodoksinen kirkko ja protestanttiset kirkot",
+      "Katolinen kirkko, juutalainen kirkko ja protestanttiset kirkot",
+      "Ortodoksinen kirkko, anglikaaninen kirkko ja luterilaiset kirkot",
+      "Katolinen kirkko, ortodoksinen kirkko ja reformoitu kirkko"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mitä kristityt tarkoittavat Jumalan kolmiyhteydellä?",
+    "options": [
+      "Isää, Poikaa ja Pyhää Henkeä",
+      "Jeesusta, Mariaa ja Joosefia",
+      "Isää, äitiä ja lasta",
+      "Moosesta, Jeesusta ja Paavalia"
+    ],
+    "correct": 0,
+    "explanation": "Kristityt uskovat yhteen Jumalaan, jolla on kolme persoonaa: Isä, Poika ja Pyhä Henki."
+  },
+  {
+    "question": "Mitä uskonnon ja omantunnon vapaus tarkoittaa tekstin mukaan?",
+    "options": [
+      "Jokaisella on oikeus uskoa vakaumuksensa mukaisesti tai olla uskomatta",
+      "Kaikkien on kuuluttava johonkin uskontokuntaan",
+      "Vain kristityillä on uskonnonvapaus",
+      "Valtio päättää, mitä uskontoa ihmiset harjoittavat"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mikä Suomen lakiin liittyvä esimerkki heijastaa lähimmäisenrakkauden ihannetta?",
+    "options": [
+      "Apua tarvitsevaa ei saa jättää heitteille",
+      "Kaikkien on käytävä kirkossa",
+      "Sunnuntait ovat kaikille vapaapäiviä",
+      "Jokainen lapsi on kastettava"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mitä rippikoulun päätteeksi usein tehdään?",
+    "options": [
+      "Osallistutaan konfirmaatioon",
+      "Mennään naimisiin",
+      "Kastetaan vauva",
+      "Ryhdytään papiksi"
+    ],
+    "correct": 0,
+    "explanation": "Rippikoulun päätteeksi lähes kaikki osallistuneet konfirmoidaan."
+  },
+  {
+    "question": "Mihin yleisesti käytetty ajanlasku perustuu?",
+    "options": [
+      "Jeesuksen arvioituun syntymävuoteen",
+      "Rooman kaupungin perustamiseen",
+      "Konstantinopolin perustamiseen",
+      "Martti Lutherin syntymään"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mitä lyhenteet eaa. ja jaa. tarkoittavat?",
+    "options": [
+      "Aikaa ennen ajanlaskua ja ajanlaskun jälkeen",
+      "Ennen aamua ja jälkeen aamun",
+      "Ennen apostolien aikaa ja apostolien jälkeen",
+      "Ennen avioliittoa ja avioliiton jälkeen"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Miksi kristityt alkoivat viettää sunnuntaita pyhäpäivänä?",
+    "options": [
+      "Koska Jeesus nousi kuolleista sunnuntaina",
+      "Koska aurinko oli roomalaisten pyhä jumala",
+      "Koska Rooman keisari syntyi sunnuntaina",
+      "Koska juutalaiset viettivät sapattia sunnuntaina"
+    ],
+    "correct": 0,
+    "explanation": "Kristityt alkoivat viettää sunnuntaita pyhäpäivänä jo 100-luvulla."
+  },
+  {
+    "question": "Kuka maalasi Sikstuksen kappelin freskot?",
+    "options": [
+      "Michelangelo",
+      "Leonardo da Vinci",
+      "J. S. Bach",
+      "Antoni Gaudí"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mihin sanonta epäilevä Tuomas viittaa?",
+    "options": [
+      "Jeesuksen oppilaaseen, joka epäili Jeesuksen nousseen kuolleista",
+      "Tuomaaseen, joka rakensi ensimmäisen kirkon",
+      "Paaviin, joka epäili Jumalan olemassaoloa",
+      "Kirjailijaan, joka kielsi uskonnon"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mitä apostolin kyydillä kulkeminen tarkoittaa?",
+    "options": [
+      "Kävelemistä",
+      "Ratsastamista hevosella",
+      "Laivalla matkustamista",
+      "Autoilua"
+    ],
+    "correct": 0,
+    "explanation": "Sanonta viittaa Jeesuksen seuraajiin, jotka kulkivat paikkakunnalta toiselle julistamassa sanomaa."
+  },
+  {
+    "question": "Mitä kristityt käyttivät aluksi pyhinä kirjoituksinaan?",
+    "options": [
+      "Juutalaisten pyhiä kirjoja",
+      "Rooman valtakunnan lakitekstejä",
+      "Kreikkalaisia myyttejä",
+      "Paavalin kirjeitä"
+    ],
+    "correct": 0,
+    "explanation": "Juutalaisten pyhiä kirjoja alettiin kutsua Vanhaksi testamentiksi."
+  },
+  {
+    "question": "Mitä evankeliumi tarkoittaa kirjaimellisesti?",
+    "options": [
+      "Ilosanomaa",
+      "Pyhää kirjaa",
+      "Uskontunnustusta",
+      "Seurakuntaa"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Kuinka monta kirjaa Uudessa testamentissa on?",
+    "options": [
+      "27",
+      "7",
+      "12",
+      "66"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Kuinka monta jumalaa tai jumalatarta Roomassa arvioidaan palvotun?",
+    "options": [
+      "Noin 30 000",
+      "Noin 300",
+      "Noin 3 000",
+      "Noin 30"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Miksi Rooman keisarit alkoivat vainota kristittyjä?",
+    "options": [
+      "Koska kristityt kieltäytyivät palvomasta jumalia ja keisaria",
+      "Koska kristityt halusivat vallata Rooman",
+      "Koska kristityt palvoivat keisaria liikaa",
+      "Koska kristityt olivat roomalaisia sotilaita"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mitä marttyyri tarkoittaa?",
+    "options": [
+      "Uskonsa tähden kuollutta kristittyä",
+      "Uskostaan luopunutta ihmistä",
+      "Rooman keisaria",
+      "Roomalaista gladiaattoria"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Missä kristittyjä pantiin taistelemaan villieläimiä vastaan?",
+    "options": [
+      "Colosseum-stadionilla",
+      "Vatikaanissa",
+      "Sikstuksen kappelissa",
+      "Athosvuorella"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Kuka Rooman keisari alkoi suosia kristittyjä ja määräsi sunnuntain valtakunnan pyhäpäiväksi?",
+    "options": [
+      "Konstantinus Suuri",
+      "Julius Caesar",
+      "Nero",
+      "Aleksanteri Suuri"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Minä vuonna kristinuskosta tuli Rooman valtakunnan valtionuskonto?",
+    "options": [
+      "392",
+      "313",
+      "28",
+      "988"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mikä oli diakonien tehtävä?",
+    "options": [
+      "Auttaa köyhiä ja avun tarpeessa olevia",
+      "Johtaa hiippakuntaa",
+      "Toimittaa messu",
+      "Kastaa lapset"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mikä on katolisen uskonnonharjoituksen tärkein osa?",
+    "options": [
+      "Messu",
+      "Rukousnauha",
+      "Virpominen",
+      "Pyhiinvaellus"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mitä messuun kuuluu?",
+    "options": [
+      "Ehtoollisen vietto",
+      "Vain saarna",
+      "Vain kuorolaulu",
+      "Vain ristinmerkki"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Missä kielessä katoliset papit toimittivat messuja pitkään?",
+    "options": [
+      "Latinaksi",
+      "Kreikaksi",
+      "Saksaksi",
+      "Suomeksi"
+    ],
+    "correct": 0,
+    "explanation": "Katolinen kirkko kehittyi Länsi-Roomassa, jonka virallinen kieli oli latina."
+  },
+  {
+    "question": "Mitä katolilaiset pyytävät pyhimyksiltä?",
+    "options": [
+      "Rukoilemaan heidän puolestaan",
+      "Antamaan synnit anteeksi",
+      "Johtamaan kirkkoa",
+      "Valitsemaan paavin"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Kuka on katolisten tärkein pyhimys?",
+    "options": [
+      "Neitsyt Maria",
+      "Pyhä Nikolaus",
+      "Pyhä Martinus",
+      "Pyhä Apollonia"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Kuka pyhä oli esikuva joulupukille?",
+    "options": [
+      "Pyhä Nikolaus",
+      "Pyhä Franciscus",
+      "Pyhä Birgitta",
+      "Pyhä Tuomas"
+    ],
+    "correct": 0,
+    "explanation": "Pyhä Nikolaus oli Myrian piispa, joka jakoi lahjoja lapsille."
+  },
+  {
+    "question": "Kuinka monta sakramenttia katolisella kirkolla on?",
+    "options": [
+      "Seitsemän",
+      "Kolme",
+      "Kaksi",
+      "Kymmenen"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mitä sakramentti tarkoittaa?",
+    "options": [
+      "Salaisuutta ja pyhää asiaa, jossa Jumala on läsnä",
+      "Rahaa, jolla synnit sovitetaan",
+      "Kirkon jäsenten äänestystä",
+      "Pyhää kirjaa"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mitä pappi tekee kasteen sakramentissa?",
+    "options": [
+      "Kastelee lapsen pään vedellä kolme kertaa",
+      "Piirtää ristin öljyllä lapsen otsaan",
+      "Antaa lapselle ehtoollisen",
+      "Vihkii lapsen papiksi"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mitä eukaristiassa nautitaan?",
+    "options": [
+      "Leipää ja viiniä",
+      "Vain leipää",
+      "Vain viiniä",
+      "Vettä ja öljyä"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mitä ripissä tapahtuu?",
+    "options": [
+      "Katolilainen tunnustaa syntinsä papille ja saa synninpäästön",
+      "Pappi kertoo kuulemansa synnit muille",
+      "Kirkko erottaa ihmisen jäsenyydestään",
+      "Ihminen kastetaan uudelleen"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Milloin sairaiden voitelun sakramentti vastaanotetaan?",
+    "options": [
+      "Kun ihminen on joutumassa kuolemanvaaraan",
+      "Vain lapsuudessa",
+      "Vain avioliiton solmimisen yhteydessä",
+      "Joka sunnuntai"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mitä katolisen miesluostarin johtajaa kutsutaan?",
+    "options": [
+      "Apotiksi",
+      "Abbedissaksi",
+      "Paaviksi",
+      "Piispaksi"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mitä fransiskaanit painottavat?",
+    "options": [
+      "Hyväntekeväisyyttä",
+      "Opettamista ja lähetystyötä",
+      "Paavin valintaa",
+      "Sotimista"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mitä luostarilupauksiin kuuluu?",
+    "options": [
+      "Eläminen ilman omaisuutta, naimattomuus ja kuuliaisuus",
+      "Avioliitto ja perheen perustaminen",
+      "Omaisuuden kerääminen",
+      "Papiksi vihkiminen"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Kuka johtaa maailmanlaajuista katolista kirkkoa?",
+    "options": [
+      "Paavi",
+      "Arkkipiispa",
+      "Rooman keisari",
+      "Konstantinopolin patriarkka"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mikä on Vatikaani?",
+    "options": [
+      "Maailman pienin valtio, joka sijaitsee Roomassa",
+      "Katolinen luostari Suomessa",
+      "Sikstuksen kappelin virallinen nimi",
+      "Roomalainen stadion"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Miten uusi paavi valitaan?",
+    "options": [
+      "Kardinaalit äänestävät, kunnes ehdokas saa kaksi kolmasosaa äänistä",
+      "Kansa äänestää vaaleissa",
+      "Edellinen paavi valitsee seuraajansa",
+      "Yhdistyneet kansakunnat valitsee paavin"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Kuinka monta jäsentä katolisella kirkolla on Suomessa?",
+    "options": [
+      "Noin 15 000",
+      "Noin 61 000",
+      "Noin 180 000",
+      "Noin 1 500"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mistä noin puolet Suomen katolisen kirkon jäsenistä on?",
+    "options": [
+      "Maahanmuuttajia eri puolilta maailmaa",
+      "Ruotsista muuttaneita",
+      "Vatikaanista tulleita",
+      "Suomen ortodoksisesta kirkosta siirtyneitä"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Missä Suomen katolisia seurakuntia on?",
+    "options": [
+      "Helsingin lisäksi Tampereella, Jyväskylässä, Kouvolassa, Oulussa ja Turussa",
+      "Vain Helsingissä",
+      "Vain Turussa ja Tampereella",
+      "Vain Lapissa"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mikä on ortodoksisen kirkon yleisin jumalanpalvelus?",
+    "options": [
+      "Liturgia",
+      "Messu",
+      "Ristisaatto",
+      "Virpominen"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mitä ortodoksisessa liturgiassa tehdään?",
+    "options": [
+      "Resitoidaan Raamatun katkelmia, poltetaan suitsukkeita ja lauletaan",
+      "Soitetaan urkuja ja pidetään hiljainen hetki",
+      "Luetaan vain saarna",
+      "Kerätään raha-aneita"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mikä on ristisaatto?",
+    "options": [
+      "Kulkue, jonka kärjessä kannetaan kynttilää, ristiä tai ikoneita",
+      "Ortodoksinen rukousnauha",
+      "Kirkon sipulinmuotoinen kupoli",
+      "Paaston päätösjuhla"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mitä ikonit esittävät?",
+    "options": [
+      "Jeesusta, Neitsyt Mariaa, pyhiä ihmisiä tai kirkon juhlia",
+      "Vain kirkkojen rakennuksia",
+      "Vain Raamatun maisemia",
+      "Vain paaveja"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mikä on ikonostaasi?",
+    "options": [
+      "Ikoneja täynnä oleva seinä, joka erottaa alttarin muusta kirkkotilasta",
+      "Ortodoksinen rukousnauha",
+      "Kirkon sipulinmuotoinen kupoli",
+      "Jumalanpalveluksen nimi"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mistä suomalaiset ortodoksiset kirkot tunnistaa?",
+    "options": [
+      "Sipulinmuotoisista kupoleista",
+      "Uruista",
+      "Lasimaalauksista",
+      "Kellotorneista"
+    ],
+    "correct": 0,
+    "explanation": "Sipulinmuotoiset kupolit kuvaavat taivasta kohti nousevaa rukouksen liekkiä."
+  },
+  {
+    "question": "Mikä on ortodoksisen kirkon käyttämä nimitys sakramenteista?",
+    "options": [
+      "Mysteeriot",
+      "Liturgiat",
+      "Ikonit",
+      "Mysteerit"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mikä vastaa katolisen kirkon vahvistuksen sakramenttia ortodoksisessa kirkossa?",
+    "options": [
+      "Mirhalla voitelu",
+      "Kaste",
+      "Ehtoollinen",
+      "Sairaanvoitelu"
+    ],
+    "correct": 0,
+    "explanation": "Mirhalla voitelu toimitetaan ortodoksisessa kirkossa heti kasteen jälkeen."
+  },
+  {
+    "question": "Miten ortodoksinen kaste eroaa katolisesta kasteesta?",
+    "options": [
+      "Lapsi upotetaan kolmesti kokonaan veteen",
+      "Lasta vain pirskotetaan vedellä",
+      "Kastetta ei toimiteta lainkaan",
+      "Kaste toimitetaan vasta aikuisena"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mitä ortodoksisen miesluostarin johtajaa kutsutaan?",
+    "options": [
+      "Igumeniksi",
+      "Apotiksi",
+      "Abbedissaksi",
+      "Patriarkaksi"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mikä on Athosvuori?",
+    "options": [
+      "Kreikan saaristossa sijaitseva tärkeä ortodoksiluostarialue",
+      "Siinain erämaassa sijaitseva luostari",
+      "Venäjän suurin kirkko",
+      "Suomen ortodoksinen luostari"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Keiden pääsy Athokselle on kielletty?",
+    "options": [
+      "Naisten ja sukupuolisten eläinten",
+      "Miesten",
+      "Lasten",
+      "Munkkien"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mikä on maailman suurin ortodoksinen kirkko?",
+    "options": [
+      "Venäjän ortodoksinen kirkko",
+      "Suomen ortodoksinen kirkko",
+      "Kreikan ortodoksinen kirkko",
+      "Konstantinopolin patriarkaatti"
+    ],
+    "correct": 0,
+    "explanation": "Venäjän ortodoksisella kirkolla on noin 180 miljoonaa jäsentä."
+  },
+  {
+    "question": "Minä vuonna ruhtinas Vladimir otti kasteen?",
+    "options": [
+      "988",
+      "1917",
+      "1991",
+      "392"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Miten Neuvostoliitto suhtautui uskontoon?",
+    "options": [
+      "Se oli virallisesti ateistinen ja pyrki hävittämään uskonnon",
+      "Se tuki kirkkoa voimakkaasti",
+      "Se salli kaikki uskonnot vapaasti",
+      "Se teki kristinuskosta valtionuskonnon"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Milloin ortodoksisuus saapui Suomen itäisiin osiin?",
+    "options": [
+      "800-luvun vaiheilla",
+      "1000-luvulla",
+      "1500-luvulla",
+      "1800-luvulla"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mihin Suomen ortodoksit liittyivät Suomen itsenäistyttyä?",
+    "options": [
+      "Konstantinopolin ekumeenisen patriarkan alaisuuteen",
+      "Venäjän ortodoksiseen kirkkoon",
+      "Katoliseen kirkkoon",
+      "Itsenäiseksi kirkoksi ilman johtajaa"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mikä on Suomen ortodoksisen kirkon jäsenmäärä?",
+    "options": [
+      "Noin 61 000",
+      "Noin 15 000",
+      "Noin 180 000",
+      "Noin 260 miljoonaa"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mitä Luther lupasi ukonilman aikana?",
+    "options": [
+      "Mennä luostariin, jos Pyhä Anna pelastaisi hänet",
+      "Rakentaa uuden kirkon",
+      "Luopua uskosta",
+      "Mennä naimisiin"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mitä Luther opiskeli ja opetti yliopistossa?",
+    "options": [
+      "Raamatun tutkimista ja selittämistä",
+      "Lääketiedettä",
+      "Lakia",
+      "Tähtitiedettä"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mitkä asiat eivät tuoneet Lutherille mielenrauhaa luostarissa?",
+    "options": [
+      "Rukous, mietiskely ja paasto",
+      "Raamatun lukeminen",
+      "Saarnaaminen",
+      "Opettaminen yliopistossa"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mitä Paavali opetti pelastuksesta?",
+    "options": [
+      "Ihminen pelastuu yksin Jumalan armosta",
+      "Ihminen pelastuu omilla ansioillaan",
+      "Pelastus ostetaan aneilla",
+      "Pelastus saadaan paavilta"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mitä kiirastuli oli kirkon opetuksen mukaan?",
+    "options": [
+      "Paikka, jossa sielu puhdistuu synneistä ennen taivaaseen pääsyä",
+      "Paikka, jossa Jeesus syntyi",
+      "Katolisen kirkon päämaja",
+      "Paikka, jossa paavi valittiin"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mitä raha-aneella saattoi tehdä?",
+    "options": [
+      "Lyhentää kiirastulessa vietettävää aikaa",
+      "Ostaa itselleen paavin viran",
+      "Saada anteeksi kaikki rikokset ilman katumusta",
+      "Päästä papiksi"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mikä auttoi Lutherin ajatusten leviämistä?",
+    "options": [
+      "Kirjanpainotaito",
+      "Internet",
+      "Radio",
+      "Sanomalehdet"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mitä katolinen kirkko teki Lutherille?",
+    "options": [
+      "Julisti hänet kirkonkiroukseen",
+      "Valitsi hänet paaviksi",
+      "Teki hänestä piispan",
+      "Antoi hänelle anteeksi ilman ehtoja"
+    ],
+    "correct": 0
+  },
+  {
+    "question": "Mihin kieleen Luther käänsi Raamatun?",
+    "options": [
+      "Saksaksi",
+      "Suomeksi",
+      "Latinaksi",
+      "Kreikaksi"
+    ],
+    "correct": 0,
+    "explanation": "Luther halusi, että jokainen ihminen voisi lukea Raamattua omalla äidinkielellään."
+  }
+];
+
+        let roundQuestions = [];
+        let currentQuestion = null;
+        let currentIndex = 0;
+        let answeredCount = 0;
+        let correctCount = 0;
+        let wrongQuestions = [];
+        let isAnswered = false;
+
+        const questionEl = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackEl = document.getElementById('feedback');
+        const feedbackResultEl = document.getElementById('feedback-result');
+        const feedbackExplanationEl = document.getElementById('feedback-explanation');
+        const correctCountEl = document.getElementById('correct-count');
+        const answeredCountEl = document.getElementById('answered-count');
+        const totalCountEl = document.getElementById('total-count');
+        const quizArea = document.getElementById('quiz-area');
+        const mainButtons = document.getElementById('main-buttons');
+        const nextBtn = document.getElementById('next-btn');
+        const completionMessage = document.getElementById('completion-message');
+        const completionHeading = document.getElementById('completion-heading');
+        const completionText = document.getElementById('completion-text');
+        const retryWrongBtn = document.getElementById('retry-wrong-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const progressBar = document.querySelector('.progress');
+
+        function shuffle(items) {
+            const shuffled = [...items];
+            for (let index = shuffled.length - 1; index > 0; index--) {
+                const swapIndex = Math.floor(Math.random() * (index + 1));
+                [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+            }
+            return shuffled;
+        }
+
+        function startRound(sourceQuestions) {
+            roundQuestions = sourceQuestions.map(function (source) {
+                return {
+                    source: source,
+                    question: source.question,
+                    explanation: source.explanation || '',
+                    options: shuffle(source.options.map(function (text, index) {
+                        return { text: text, isCorrect: index === source.correct };
+                    }))
+                };
+            });
+
+            currentIndex = 0;
+            answeredCount = 0;
+            correctCount = 0;
+            wrongQuestions = [];
+            isAnswered = false;
+
+            completionMessage.style.display = 'none';
+            quizArea.style.display = 'block';
+            progressBar.style.display = 'block';
+            mainButtons.style.display = 'flex';
+
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            currentQuestion = roundQuestions[currentIndex];
+            isAnswered = false;
+
+            questionEl.textContent = currentQuestion.question;
+            optionsContainer.innerHTML = '';
+
+            currentQuestion.options.forEach(function (option, index) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'option-btn';
+                button.dataset.index = String(index);
+
+                const number = document.createElement('span');
+                number.className = 'option-number';
+                number.textContent = String(index + 1);
+
+                const label = document.createElement('span');
+                label.className = 'option-label';
+                label.textContent = option.text;
+
+                button.append(number, label);
+                button.addEventListener('click', function () {
+                    selectOption(index);
+                });
+                optionsContainer.append(button);
+            });
+
+            feedbackEl.style.display = 'none';
+            feedbackEl.classList.remove('correct', 'wrong');
+            feedbackResultEl.textContent = '';
+            feedbackExplanationEl.textContent = '';
+            nextBtn.style.display = 'none';
+            nextBtn.textContent = currentIndex === roundQuestions.length - 1
+                ? 'Näytä tulos (Enter)'
+                : 'Seuraava (Enter)';
+
+            updateStats();
+            quizArea.classList.remove('fade-in');
+            void quizArea.offsetWidth;
+            quizArea.classList.add('fade-in');
+        }
+
+        function selectOption(index) {
+            if (isAnswered || !currentQuestion) {
+                return;
+            }
+
+            const selectedOption = currentQuestion.options[index];
+            if (!selectedOption) {
+                return;
+            }
+
+            isAnswered = true;
+            answeredCount += 1;
+
+            const buttons = optionsContainer.querySelectorAll('.option-btn');
+            buttons.forEach(function (button, buttonIndex) {
+                const option = currentQuestion.options[buttonIndex];
+                button.disabled = true;
+
+                if (option.isCorrect) {
+                    button.classList.add('is-correct');
+                } else if (buttonIndex === index) {
+                    button.classList.add('is-wrong');
+                } else {
+                    button.classList.add('is-dimmed');
+                }
+            });
+
+            if (selectedOption.isCorrect) {
+                correctCount += 1;
+                feedbackEl.classList.add('correct');
+                feedbackResultEl.textContent = 'Oikein!';
+            } else {
+                wrongQuestions.push(currentQuestion.source);
+                const correctOption = currentQuestion.options.find(function (option) {
+                    return option.isCorrect;
+                });
+                feedbackEl.classList.add('wrong');
+                feedbackResultEl.textContent = 'Väärin. Oikea vastaus: ' + (correctOption ? correctOption.text : '');
+            }
+
+            if (currentQuestion.explanation) {
+                feedbackExplanationEl.textContent = currentQuestion.explanation;
+            }
+
+            feedbackEl.style.display = 'block';
+            nextBtn.style.display = 'block';
+            updateStats();
+        }
+
+        function updateStats() {
+            correctCountEl.textContent = correctCount;
+            answeredCountEl.textContent = answeredCount;
+            totalCountEl.textContent = roundQuestions.length;
+        }
+
+        function nextQuestion() {
+            if (!isAnswered) {
+                return;
+            }
+
+            currentIndex += 1;
+            if (currentIndex >= roundQuestions.length) {
+                showCompletion();
+            } else {
+                renderQuestion();
+            }
+        }
+
+        function showCompletion() {
+            quizArea.style.display = 'none';
+            mainButtons.style.display = 'none';
+            completionMessage.style.display = 'block';
+
+            completionHeading.textContent = 'Tulos: ' + correctCount + ' / ' + roundQuestions.length + ' oikein';
+
+            if (wrongQuestions.length === 0) {
+                completionHeading.style.color = '#27ae60';
+                completionText.textContent = 'Hienoa! Vastasit kaikkiin kysymyksiin oikein.';
+                retryWrongBtn.style.display = 'none';
+            } else {
+                completionHeading.style.color = '#1f3a5f';
+                completionText.textContent = wrongQuestions.length === 1
+                    ? 'Kertaa vielä 1 väärin mennyt kysymys.'
+                    : 'Kertaa vielä ' + wrongQuestions.length + ' väärin mennyttä kysymystä.';
+                retryWrongBtn.style.display = 'inline-block';
+            }
+
+            restartBtn.style.display = 'inline-block';
+            completionMessage.classList.remove('fade-in');
+            void completionMessage.offsetWidth;
+            completionMessage.classList.add('fade-in');
+        }
+
+        function retryWrong() {
+            if (wrongQuestions.length === 0) {
+                return;
+            }
+
+            startRound(wrongQuestions.slice());
+        }
+
+        function restartQuiz() {
+            if (allQuestions.length === 0) {
+                showEmptyState();
+                return;
+            }
+
+            startRound(allQuestions);
+        }
+
+        function showEmptyState() {
+            progressBar.style.display = 'none';
+            quizArea.style.display = 'none';
+            mainButtons.style.display = 'none';
+            completionMessage.style.display = 'block';
+            completionHeading.style.color = '#1f3a5f';
+            completionHeading.textContent = 'Ei kysymyksiä';
+            completionText.textContent = 'Lisää kysymyksiä JSON-tiedostoon.';
+            retryWrongBtn.style.display = 'none';
+            restartBtn.style.display = 'none';
+        }
+
+        document.addEventListener('keydown', function (event) {
+            const key = event.key.toLowerCase();
+
+            if (completionMessage.style.display === 'block') {
+                if (allQuestions.length === 0) {
+                    return;
+                }
+
+                if (key === 'v' && retryWrongBtn.style.display !== 'none') {
+                    event.preventDefault();
+                    retryWrong();
+                } else if (key === 'r') {
+                    event.preventDefault();
+                    restartQuiz();
+                }
+                return;
+            }
+
+            if (isAnswered) {
+                if (event.key === 'Enter' || key === 'n') {
+                    event.preventDefault();
+                    nextQuestion();
+                }
+                return;
+            }
+
+            if (event.key === 'Enter') {
+                return;
+            }
+
+            const number = Number(event.key);
+            if (Number.isInteger(number) && number >= 1 && number <= 9) {
+                const index = number - 1;
+                if (currentQuestion && index < currentQuestion.options.length) {
+                    event.preventDefault();
+                    selectOption(index);
+                }
+            }
+        });
+
+        if (allQuestions.length === 0) {
+            showEmptyState();
+        } else {
+            startRound(allQuestions);
+        }
+    </script>
+</body>
+</html>
