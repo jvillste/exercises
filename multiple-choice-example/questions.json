@@ -1,0 +1,35 @@
+[
+  {
+    "question": "Mikä on Suomen pääkaupunki?",
+    "options": ["Turku", "Helsinki", "Tampere", "Oulu"],
+    "correct": 1,
+    "explanation": "Helsinki on ollut Suomen pääkaupunki vuodesta 1812."
+  },
+  {
+    "question": "Mikä on maapallon suurin valtameri?",
+    "options": ["Atlantti", "Intian valtameri", "Tyynimeri", "Pohjoinen jäämeri"],
+    "correct": 2
+  },
+  {
+    "question": "Mitä kaasua kasvit tarvitsevat yhteyttämisessä?",
+    "options": ["Happi", "Typpi", "Hiilidioksidi", "Vety"],
+    "correct": 2,
+    "explanation": "Kasvit ottavat yhteyttämisessä hiilidioksidia ilmasta ja vapauttavat happea."
+  },
+  {
+    "question": "Minä vuonna Suomi itsenäistyi?",
+    "options": ["1905", "1917", "1919", "1920"],
+    "correct": 1
+  },
+  {
+    "question": "Mikä on ihmisoikeuksien keskeinen periaate?",
+    "options": [
+      "Oikeudet kuuluvat vain kansalaisille",
+      "Kaikki ihmiset ovat yhtä arvokkaita",
+      "Oikeudet riippuvat asuinpaikasta",
+      "Vain aikuisilla on oikeuksia"
+    ],
+    "correct": 1,
+    "explanation": "Ihmisoikeudet kuuluvat kaikille ihmisille. Jokainen ihminen on yhtä arvokas."
+  }
+]
